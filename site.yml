@@ -1,1 +1,7 @@
 # Bu dosya Ansible playbook dosyasıdır.
+- name: Basit Test Playbook'u
+  hosts: all
+  become: true
+  tasks:
+    - name: Uzak sunucuda 'uptime' komutunu çalıştır
+      ansible.builtin.command: uptime
