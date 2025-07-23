@@ -1,7 +1,48 @@
-# Bu dosya Ansible playbook dosyasıdır.
-- name: Basit Test Playbook'u
+#Bu dosya Ansible playbook dosyasıdır.
+
+---
+- name: Zabbix 7.4 kurulumu (Ubuntu 24.04)
   hosts: all
   become: true
+
   tasks:
-    - name: Uzak sunucuda 'uptime' komutunu çalıştır
-      ansible.builtin.command: uptime
+    # 1) Doğru repo paketini indir
+    - name: Zabbix repo paketini indir
+      ansible.builtin.get_url:
+        url: https://repo.zabbix.com/zabbix/7.4/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.4-0.2+ubuntu24.04_all.deb
+        dest: /tmp/zabbix-release.deb
+
+    # 2) Paketi kur
+    - name: Zabbix repo paketini kur
+      ansible.builtin.apt:
+        deb: /tmp/zabbix-release.deb
+        state: present
+
+    # 3) Paket listelerini yenile
+    - name: Apt önbelleğini güncelle
+      ansible.builtin.apt:
+        update_cache: yes
+
+    # 4) Zabbix bileşenlerini kur
+    - name: Zabbix bileşenlerini kur
+      ansible.builtin.apt:
+        name:
+          - zabbix-server-mysql
+          - zabbix-frontend-php
+          - zabbix-apache-conf
+          - zabbix-sql-scripts
+          - zabbix-agent
+        state: present
+
+    # 5) Servisleri başlat ve enable et
+    - name: Zabbix servislerini başlat / enable et
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - zabbix-server
+        - zabbix-agent
+
+
+
