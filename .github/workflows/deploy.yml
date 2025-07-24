@@ -1,0 +1,33 @@
+name: Deploy Zabbix (it-02)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu çek
+        uses: actions/checkout@v4
+
+      - name: Ansible kur
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Hosts dosyası oluştur
+        run: |
+          echo "[zabbix]" > hosts
+          echo "it-02 ansible_host=138.197.178.242 ansible_user=root" >> hosts
+
+      - name: SSH anahtarını ekle
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_rsa
+          chmod 600 id_rsa
+
+      - name: Playbook çalıştır
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: ansible-playbook -i hosts site.yml --private-key id_rsa
